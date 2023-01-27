@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Classement</title>
+		<meta charset="utf-8" lang="en"/> 
+    	<link rel="stylesheet" type="text/css" href="style.css">
+        <script>
+              async function getWeather(city) {
+                const apiKey = "2c0cb798ae504ac789d65429212411"
+               let temp= await fetch("https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid=3e9798c899c268bf3b6cfaa8b2c3b670")
+                .then(prm=>prm.json())
+                .then(rep=>rep)
+                .catch(err=>{ console.log("Client error = ",err) })
+                .catch(err=>{ console.log("Server error = ",err) })
+                // console.log(temp.wind.deg);
+                return temp;
+                 }
+ 
+            async function buildList(rep){
+                let list = ""
+                for(let i = 0; i < rep.length; i++){
+                    let matche = rep[i]
+                    let meteo= await getWeather(matche.city)
+                     //console.log(meteo.weather[0].description);  meteo.wind.deg if u wanna go with the wind forecast
+                    let d = new Date(matche.date)
+                    list += ` Le ${d.toLocaleDateString()} à ${d.toLocaleTimeString()}`
+                    list += `<div style="display:flex;justify-content:space-around">`;
+                    list += `<div style="width:65%;display:flex;justify-content:space-around">`;
+                    list += `<img class="logo" alt="${matche.name_guest}" src="${matche.logo_guest}" />`
+                    list += `<h4> ${matche.name_guest} <span style="margin-left:8px;margin-right:8px">${matche.score_guest}</span></h4>`
+                    list += ` __ `
+                    list += `<h4> ${matche.score_visitor} <span style="margin-left:8px;margin-right:8px">${matche.name_visitor}</span></h4>`
+                    list += `<img class="logo" alt="${matche.name_visitor}" src="${matche.logo_visitor}" />`
+                    list += `</div>`
+                    list += `condition méteo:<b style="color:black">${meteo.weather[0].description}</b>`
+                    list += `<div style="width:34%;display:flex;justify-content:space-around">`;
+                    list += `<button class="update" onclick="window.location.replace('updateScore.html?id=${matche.id}')"> Modifier score </button>`
+                    list += `<button class="delete" onclick="deleteMatche(${matche.id})"> Supprimer </button>`
+                    list += `</div>`
+                    list += `</div>`
+                }    
+                console.log("html = ",list)
+                document.querySelector("#content").innerHTML = list;
+            }
+
+            function deleteMatche(id){
+                let conf = window.confirm("Confirmer la suppression du matche "+id+" ?")
+                if(conf){
+                    fetch("http://localhost:3000/api/deleteMatche/"+id,{
+                        "headers":{
+                            "authorization":"JWT "+window.localStorage.getItem("token")
+                        },
+                        "method":"delete"
+                    })
+                    .then(function(prm){
+                        if(prm.status === 500){
+                            return prm.json().then(function(rep){
+                                alert(rep.error)
+                            })
+                        }
+                        else if(prm.status === 200){
+                            return prm.json().then(function(rep){
+                                alert(rep.message)
+                                window.location.reload()
+                            })
+                        }
+                    })
+                    .catch(function(err){ alert("Erreur au niveau client !") })
+                    .catch(function(err){ alert("Une erreur a empêché la suppression !") })
+                }
+            }
+        </script>
+	</head>
+
+    <body>
+        <div style="display: flex; justify-content: space-around; margin: 16px">
+            <a href="createMatche.html" id="ajoutClub"> <button> Créer un matche </button> </a>
+            <h4 id="userName">  </h4>
+            <button id="logout" class="delete"> Se déconnecter </button>
+        </div>
+        <div id="content" style="background-color:seagreen;color: beige;">
+
+        </div>
+        <script>
+            document.querySelector("#userName").innerText = "Bienvenu "+window.localStorage.getItem("userName")
+            document.querySelector("#content").innerHTML = "<h4> Loading... </h4>";
+            let content = [];
+            window.onload = async function(e){
+                await fetch("http://localhost:3000/api/listMatches",{
+                    "headers":{
+                        "authorization":"JWT "+window.localStorage.getItem("token")
+                    }
+                })
+                .then(function(prm){
+                    if(prm.status===500){
+                        alert("Une erreur s'est produite sur le serveur!")
+                    }
+                    else if(prm.status===400){
+                        document.querySelector("#content").innerHTML = "<h3> Aucun matche pour le pays choisi! </h3>";
+                    }
+                    else{
+                        return prm.json().then(
+                            function(rep){
+                                content = rep;
+                            }
+                        )
+                    }
+                }).catch(function(err){
+                    alert("Une erreur a empêché l'éxecution de la requête")
+                });
+                buildList(content.matches)
+            }
+            document.querySelector("#logout").addEventListener("click",function(e){
+                window.localStorage.removeItem("token")
+                window.localStorage.removeItem("userName")
+                window.localStorage.removeItem("role")
+                window.location.replace("./login.html")
+            })
+        </script>
+    </body>
+</html>

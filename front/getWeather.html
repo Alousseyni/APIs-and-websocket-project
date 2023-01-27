@@ -1,0 +1,46 @@
+
+ <!-- i didn't even use this code -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form
+      action="https://api.weatherapi.com/v1/forecast.json?key=2c0cb798ae504ac789d65429212411&q=London&days=5&aqi=no&alerts=no
+        "
+      method="get"
+    >
+      <select name="city" id="city"></select>
+      <button id="getWeather">Météo</button>
+    </form>
+  </body>
+  <script>
+    const apiKey = "2c0cb798ae504ac789d65429212411"
+    const locations = {
+      London: "Londre",
+      Paris: "Paris",
+      Madrid: "Madrid",
+      Munich: "Munich",
+      Barcelona: "Barcelone",
+    };
+    let options = "<option value=null> </option>";
+    Object.keys(locations).forEach(function (location) {
+      options +=
+        "<option value=" + location + ">" + locations[location] + "</option>";
+    });
+    document.querySelector("#city").innerHTML = options
+    document.querySelector("#getWeather").addEventListener("click",function(event){
+      event.preventDefault();
+      let city = document.querySelector("#city").value;
+      fetch("https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid=3e9798c899c268bf3b6cfaa8b2c3b670")
+      .then(prm=>prm.json())
+      .then(rep=>console.log(rep))
+      .catch(err=>{ console.log("Client error = ",err) })
+      .catch(err=>{ console.log("Server error = ",err) })
+    })
+  </script>
+</html>

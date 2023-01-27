@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
+</head>
+<body>
+    <form action="/" method="get">
+        <div style="display: flex;justify-content: center; flex-direction: column;">
+            <label for="user">Utilisateur</label>
+            <input type="text" name="user" id="user" />
+            <label for="password">Mot de passe</label>
+            <input type="password" name="password" id="password" />
+        </div>
+        <br/><input type="submit" value="Se connecter" />
+    </form>
+</body>
+<script>
+    document.querySelector("form").onsubmit = function(event){
+        event.preventDefault()
+        const user = document.querySelector("#user").value;
+        const password = document.querySelector("#password").value;
+        fetch("http://localhost:3000/api/login?user="+user+"&password="+password)
+        .then(prm=>{
+            if(prm.status === 200){
+                return prm.json()
+            }
+            alert("Connexion non autorisée ")
+            return false
+        }).then(rep=>{
+            if(rep.jwt){
+                window.localStorage.setItem("token",rep.jwt)
+                window.localStorage.setItem("userName",rep.userName || "")
+                window.localStorage.setItem("role",rep.role || "")
+                window.location.replace("./listMatches.html")
+            }
+            else{
+                alert("aucun token !")
+            }
+        }).catch(err=>console.log("Une erreur s'est produite "+err))
+        .catch(err=>console.log("Une erreur s'est produite coté serveur "+err))
+    }
+</script>
+</html>

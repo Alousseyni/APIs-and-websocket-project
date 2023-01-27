@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouveau matche</title>
+</head>
+<body>
+    <button onclick="window.location.replace('./listMatches.html')"> <- </button>
+    <form action="http://localhost:3000/api/createMatche" method="post">
+        <select name="idGuest" id="idGuest">
+
+        </select>
+        <select name="idVisitor" id="idVisitor">
+
+        </select>
+        <input type="datetime-local" name="date" id="date" />
+        <input type="submit" value="Confirmer" />
+    </form>
+</body>
+<script>
+    function loadClubs() {
+        fetch("http://localhost:3000/api/listClubs",{
+        "headers": {
+            "Accept": "*/*",
+            "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
+            "authorization":"JWT "+window.localStorage.getItem("token")
+        },
+        "method": "GET",
+        "mode": "cors"
+    })
+        .then(function(prm){ return prm.json() })
+        .then(function(rep){
+            let options = "<option value=''> </option>";
+            for (let index = 0; index < rep.clubs.length; index++) {
+                options += "<option value="+rep.clubs[index]['id']+"> "+rep.clubs[index]['nom']+" </option>";            
+            }
+            document.querySelector("#idGuest").innerHTML = options;
+            document.querySelector("#idVisitor").innerHTML = options;
+        })
+        .catch(err=>{ console.log("Client error = ",err) })
+        .catch(err=>{ console.log("Server error = ",err) })    
+    }
+    
+    loadClubs()
+    
+    function createMatche(form){
+        fetch("http://localhost:3000/api/createMatche", {
+            "headers":{
+                "Content-Type":"application/json",
+                "authorization":"JWT "+window.localStorage.getItem("token")
+            },
+            "body": JSON.stringify(form),
+            "method": "POST"
+            }).then(function(prm){
+            if(prm.status === 201){
+                alert("Matche créé avec succès ");
+                window.location.replace("./listMatches.html")
+            }
+            else{
+                alert("Matche non créé !")
+            }
+        })
+        .catch(err=>{ console.log("Client error = ",err) })
+        .catch(err=>{ console.log("Server error = ",err) })    
+    }
+
+    document.querySelector("form").addEventListener("submit",function(e){
+        e.preventDefault()
+        //Nouvel object JSON à remplir avec la data
+        let form = new FormData(e.target)
+        //jsonForm = Object.fromEntries(form.entries())
+        let d = new Date(form.get("date"))
+        let jsonForm = {id_guest:form.get("idGuest"), id_visitor:form.get("idVisitor"), date: d.getFullYear()+"-"+parseInt(d.getMonth()+1)+"-"+d.getDate()+" "+d.toLocaleTimeString()}
+        createMatche(jsonForm)
+    })
+</script>
+</html>

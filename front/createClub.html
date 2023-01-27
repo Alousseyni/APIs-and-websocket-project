@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h2>
+        Créer un nouveau club:
+    </h2>
+    <form enctype="multipart/form-data" action="http://localhost/my_project/front/createClub.html" method="post" style="height: 200px; display:flex; justify-content:space-between; align-content:center ; flex-direction: column;">
+        <label for="pays"> Pays:
+            <select id="pays" name="pays">
+
+            </select>
+        </label>
+        <label for="city"> Ville:
+            <input type="text" name="city" id="city" />
+            
+        </label>
+        <label for="nom"> Nom club: 
+            <input class='input' type="text" id="nom" name="nom" />
+        </label>
+        <label for="logo"> Logo: 
+            <input class='input' type="file" id="logo" name="logo" accept="image/png, image/jpeg" />
+        </label>
+        <input class="bouton" type="submit" value="Créer" />
+    </form>
+</body>
+<script>
+    function loadPays() {
+        fetch("http://localhost/my_project/phpAPI/listPays.php",{
+    "credentials": "omit",
+    "headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0",
+        "Accept": "*/*",
+        "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site"
+    },
+    "method": "GET",
+    "mode": "cors"
+})
+        .then(function(prm){ return prm.json() })
+        .then(function(rep){
+            let options = "<option value=''> </option>";
+            for (let index = 0; index < rep.length; index++) {
+                options += "<option value="+rep[index]['id']+"> "+rep[index]['Nom']+" </option>";            
+            }
+            document.querySelector("#pays").innerHTML = options;
+        })
+        .catch(err=>{ console.log("Client error = ",err) })
+        .catch(err=>{ console.log("Server error = ",err) })    
+    }
+    loadPays()
+    
+</script>
+</html>

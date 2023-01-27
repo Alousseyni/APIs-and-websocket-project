@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score</title>
+</head>
+<body>
+    <button onclick="window.location.replace('./listMatches.html')"> <- </button>
+    <h3>
+        Mettre à jour le matche <strong id="matcheTitle"> </strong>
+    </h3>
+    <form action="/" method="post">
+        <div style="display:flex;justify-content:space-around">
+            <label id="clubGuest" for="scoreGuest"> </label>
+            <input type="number" name="scoreGuest" id="scoreGuest">
+            <div style="margin-left: 12px;margin-right: 12px;">   __  </div>
+            <input type="number" name="scoreVisitor" id="scoreVisitor">
+            <label id="clubVisitor" for="scoreVisitor"> </label>
+        </div>    
+        <input type="submit" value="Valider">
+    </form>
+</body>
+<script>
+    //récupération de l'id du matche depuis l'URL
+    let urlParams = new URLSearchParams(window.location.search)
+    const id = urlParams.get("id")
+    async function loadMatcheData(){
+        await fetch("http://localhost:3000/api/Matche/"+id,{
+        "headers": {
+            "Accept": "*/*",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "cross-site",
+            "authorization":"JWT "+window.localStorage.getItem("token")
+        },
+        "method": "GET",
+        "mode": "cors"
+    })
+        .then(function(prm){ return prm.json() })
+        .then(function(rep){
+            const matche = rep['matche']
+            document.querySelector("#clubGuest").innerText = matche['name_guest']
+            document.querySelector("#clubVisitor").innerText = matche['name_visitor']
+            document.querySelector("#scoreGuest").value = matche['score_guest'];
+            document.querySelector("#scoreVisitor").value = matche['score_visitor'];
+        })
+        .catch(err=>{ console.log("Client error = ",err) })
+        .catch(err=>{ console.log("Server error = ",err) })    
+    }
+    loadMatcheData();
+
+    document.querySelector("form").addEventListener("submit",function(e){
+        //empêcher la redirection vers le "action" du formulaire
+        e.preventDefault()
+        let score = new Object();
+        score['guest'] = document.querySelector("#scoreGuest").value
+        score['visitor'] = document.querySelector("#scoreVisitor").value
+        console.log("score = ",score)
+        //envoyer les données en json au serveur
+        fetch("http://localhost:3000/api/updateScore/"+id,{
+            "headers":{
+                "Content-Type":"application/json",
+                "authorization":"JWT "+window.localStorage.getItem("token")
+            },
+            "method":"PUT",
+            "body":JSON.stringify(score)
+        }).then(function(prm){
+            if(prm.status === 200){
+                alert("Matche modifié avec succès ");
+                window.location.replace("./listMatches.html")
+            }
+            else{
+                alert("Un problème a empêché la mise à jour du score !")
+            }
+        })
+        .catch(err=>{ console.log("Client error = ",err) })
+        .catch(err=>{ console.log("Server error = ",err) })
+    })
+</script>
+</html>
